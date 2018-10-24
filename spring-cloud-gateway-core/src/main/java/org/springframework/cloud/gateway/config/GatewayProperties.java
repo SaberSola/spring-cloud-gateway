@@ -42,12 +42,12 @@ public class GatewayProperties {
 	 */
 	@NotNull
 	@Valid
-	private List<RouteDefinition> routes = new ArrayList<>();
+	private List<RouteDefinition> routes = new ArrayList<>(); //对route进行定义
 
 	/**
 	 * List of filter definitions that are applied to every route.
 	 */
-	private List<FilterDefinition> defaultFilters = new ArrayList<>();
+	private List<FilterDefinition> defaultFilters = new ArrayList<>();//定义默认的Filter 默认的Filter会绑定所有的路由
 
 	private List<MediaType> streamingMediaTypes = Arrays.asList(MediaType.TEXT_EVENT_STREAM,
 			MediaType.APPLICATION_STREAM_JSON);

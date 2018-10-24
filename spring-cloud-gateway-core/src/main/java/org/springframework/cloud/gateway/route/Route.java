@@ -41,14 +41,20 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.t
  */
 public class Route implements Ordered {
 
+
+	// 标识符
 	private final String id;
 
+	//路由指向的uri 即客户端最终被转发的目的地
 	private final URI uri;
 
+	//多个路由之间的排序
 	private final int order;
 
+	//匹配该路由的前置条件 符合这些条件才会转发到目的uri
 	private final AsyncPredicate<ServerWebExchange> predicate;
 
+	//处理的过滤器 即切面逻辑
 	private final List<GatewayFilter> gatewayFilters;
 
 	public static Builder builder() {

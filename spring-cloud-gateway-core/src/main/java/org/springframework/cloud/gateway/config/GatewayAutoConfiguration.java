@@ -150,8 +150,13 @@ public class GatewayAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(HttpClient.class)
 	protected static class NettyConfiguration {
+
+
+		/**
+		 * 创建httpclient 使用netty
+		 */
 		@Bean
-		@ConditionalOnMissingBean
+		@ConditionalOnMissingBean //
 		public HttpClient httpClient(HttpClientProperties properties) {
 
 			// configure pool resources
@@ -358,12 +363,13 @@ public class GatewayAutoConfiguration {
 		return new AdaptCachedBodyGlobalFilter();
 	}
 
-	@Bean
+	//初始化GloblFilter
+	@Bean//2.1
 	public RouteToRequestUrlFilter routeToRequestUrlFilter() {
 		return new RouteToRequestUrlFilter();
 	}
 
-	@Bean
+	@Bean//2.2
 	public ForwardRoutingFilter forwardRoutingFilter(ObjectProvider<DispatcherHandler> dispatcherHandler) {
 		return new ForwardRoutingFilter(dispatcherHandler);
 	}
@@ -373,12 +379,12 @@ public class GatewayAutoConfiguration {
 		return new ForwardPathFilter();
 	}
 
-	@Bean
+	@Bean//2.3
 	public WebSocketService webSocketService() {
 		return new HandshakeWebSocketService();
 	}
 
-	@Bean
+	@Bean// 2.4
 	public WebsocketRoutingFilter websocketRoutingFilter(WebSocketClient webSocketClient,
 														 WebSocketService webSocketService,
 														 ObjectProvider<List<HttpHeadersFilter>> headersFilters) {

@@ -38,6 +38,12 @@ public class GatewayLoadBalancerClientAutoConfiguration {
 
 	// GlobalFilter beans
 
+	/**
+	 *
+	 * 初始化负载均衡
+	 * @param client
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnBean(LoadBalancerClient.class)
 	@ConditionalOnMissingBean(LoadBalancerClientFilter.class)

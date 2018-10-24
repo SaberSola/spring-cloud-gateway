@@ -30,12 +30,14 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
  * @author Spencer Gibb
+ *
+ * 定义过滤器
  */
 @Validated
 public class FilterDefinition {
 	@NotNull
-	private String name;
-	private Map<String, String> args = new LinkedHashMap<>();
+	private String name;   //定义过滤器名称
+	private Map<String, String> args = new LinkedHashMap<>(); //key-value 形式构建filter参数
 
 	public FilterDefinition() {
 	}

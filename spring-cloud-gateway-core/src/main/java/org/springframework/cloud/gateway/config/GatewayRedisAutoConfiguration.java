@@ -32,6 +32,12 @@ import org.springframework.web.reactive.DispatcherHandler;
 @ConditionalOnClass({RedisTemplate.class, DispatcherHandler.class})
 class GatewayRedisAutoConfiguration {
 
+	/**
+	 * 初始化redis 限流 lua
+	 * @return
+	 */
+
+
 	@Bean
 	@SuppressWarnings("unchecked")
 	public RedisScript redisRequestRateLimiterScript() {

@@ -30,6 +30,9 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.t
 
 /**
  * @author Spencer Gibb
+ * 所有PredicateFactory的父类接口 用来生产predicate
+ * 创建一个config 以其作为参数来绑定到apply（）生产一个Predicate
+ * 在将其包装为AsyncPredicate
  */
 @FunctionalInterface
 public interface RoutePredicateFactory<C> extends ShortcutConfigurable, Configurable<C> {
