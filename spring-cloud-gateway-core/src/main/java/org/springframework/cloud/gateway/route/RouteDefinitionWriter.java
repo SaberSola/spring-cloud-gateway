@@ -24,7 +24,17 @@ import reactor.core.publisher.Mono;
  */
 public interface RouteDefinitionWriter {
 
+	/**
+	 * 保存
+	 * @param route
+	 * @return
+	 */
 	Mono<Void> save(Mono<RouteDefinition> route);
 
+	/**
+	 * 删除
+	 * @param routeId
+	 * @return
+	 */
 	Mono<Void> delete(Mono<String> routeId);
 }

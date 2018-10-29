@@ -37,13 +37,26 @@ import org.springframework.util.StringUtils;
 
 /**
  * TODO: change to RouteLocator? use java dsl
+ * 注册中心
  * @author Spencer Gibb
+ */
+
+/**
+ * 通过调用 org.springframework.cloud.client.discovery.DiscoveryClient
+ * 获取注册在注册中心的服务列表，生成对应的 RouteDefinition 数组。
  */
 public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLocator {
 
+	//注册发现客户端,用于像注册中心发起请求
 	private final DiscoveryClient discoveryClient;
+
+	//加载配置文件属性
 	private final DiscoveryLocatorProperties properties;
+
+	//属性，路由配置编号前缀，以 DiscoveryClient 类名 + _
 	private final String routeIdPrefix;
+
+	//解析el表达式
 	private final SimpleEvaluationContext evalCtxt;
 
 	public DiscoveryClientRouteDefinitionLocator(DiscoveryClient discoveryClient, DiscoveryLocatorProperties properties) {
@@ -80,21 +93,36 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 			};
 		}
 
-		return Flux.fromIterable(discoveryClient.getServices())
+		return Flux.fromIterable(discoveryClient.getServices())  //调用 discoveryClient 获取注册在注册中心的服务列表。
 				.map(discoveryClient::getInstances)
-				.filter(instances -> !instances.isEmpty())
-				.map(instances -> instances.get(0))
-				.filter(includePredicate)
-				.map(instance -> {
+  				.filter(instances -> !instances.isEmpty())    //过滤出服务部位null
+				.map(instances -> instances.get(0))           //多实例的话去第一个
+				.filter(includePredicate)                     //根据谓语匹配
+				.map(instance -> {                    //遍历服务列表，生成对应的 RouteDefinition 数组。
 					String serviceId = instance.getServiceId();
 
                     RouteDefinition routeDefinition = new RouteDefinition();
+
+                    // 设置 ID
                     routeDefinition.setId(this.routeIdPrefix + serviceId);
+
+                    //设置uri
+					/**
+					 * 格式为 lb://${serviceId} 。
+					 * 在 LoadBalancerClientFilter 会根据 lb:// 前缀过滤处理，负载均衡，选择最终调用的服务地址
+					 */
 					String uri = urlExpr.getValue(evalCtxt, instance, String.class);
 					routeDefinition.setUri(URI.create(uri));
 
+
 					final ServiceInstance instanceForEval = new DelegatingServiceInstance(instance, properties);
 
+					/**
+					 * 添加path 匹配断言
+					 *
+					 * 例如服务的 serviceId = spring.application.name = juejin-sample ，
+					 * 通过网关 http://${gateway}/${serviceId}/some_api 访问服务 http://some_api 。
+					 */
 					for (PredicateDefinition original : this.properties.getPredicates()) {
 						PredicateDefinition predicate = new PredicateDefinition();
 						predicate.setName(original.getName());
@@ -105,6 +133,11 @@ public class DiscoveryClientRouteDefinitionLocator implements RouteDefinitionLoc
 						routeDefinition.getPredicates().add(predicate);
 					}
 
+					/**
+					 * 添加path 重写过滤器
+					 * 使用 RewritePathGatewayFilterFactory 创建重写网关过滤器，
+					 * 用于移除请求路径里的 /${serviceId} 。如果不移除，最终请求不到服务
+					 */
                     for (FilterDefinition original : this.properties.getFilters()) {
                     	FilterDefinition filter = new FilterDefinition();
                     	filter.setName(original.getName());

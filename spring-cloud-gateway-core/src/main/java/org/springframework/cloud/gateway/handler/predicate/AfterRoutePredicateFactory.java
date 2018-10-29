@@ -31,19 +31,34 @@ import static org.springframework.cloud.gateway.handler.predicate.BetweenRoutePr
  */
 public class AfterRoutePredicateFactory extends AbstractRoutePredicateFactory<AfterRoutePredicateFactory.Config> {
 
+    //声明了泛型 即使用到配置类为AfterRoutePredicateFactory的config类
+
 	public static final String DATETIME_KEY = "datetime";
 
 	public AfterRoutePredicateFactory() {
 		super(Config.class);
 	}
 
+	/**
+	 *
+	 * @return
+	 */
 	@Override
 	public List<String> shortcutFieldOrder() {
 		return Collections.singletonList(DATETIME_KEY);
 	}
 
+	/**
+	 * 判断当前时间是否在配置的时间之后
+	 *
+	 * 配置文件中的PredicateDefinition对象是如何转换为AfterRoutePredicateFactory对象的
+	 * @param config
+	 * @return
+	 */
 	@Override
 	public Predicate<ServerWebExchange> apply(Config config) {
+
+		//config配置类只包好datetime 字段
 		ZonedDateTime datetime = getZonedDateTime(config.getDatetime());
 		return exchange -> {
 			final ZonedDateTime now = ZonedDateTime.now();

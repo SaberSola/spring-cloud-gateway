@@ -21,6 +21,8 @@ import reactor.core.publisher.Flux;
 
 /**
  * @author Spencer Gibb
+ * 外部化配置定义 Route 使用的是 RouteDefinition 组件。
+ * 同样的也有配套的 RouteDefinitionLocator 组件。
  * //路由定位器接口
  * FLux 响应式编程
  */

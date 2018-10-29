@@ -29,9 +29,17 @@ import reactor.core.publisher.Mono;
 
 /**
  * @author Spencer Gibb
+ *
+ *  这是基于内存为存储器
  */
 public class InMemoryRouteDefinitionRepository implements RouteDefinitionRepository {
 
+
+	/**
+	 * 配置路由映射
+	 * key 为RouteId
+	 * key ：路由编号 {@link RouteDefinition#id}
+	 */
 	private final Map<String, RouteDefinition> routes = synchronizedMap(new LinkedHashMap<String, RouteDefinition>());
 
 	@Override

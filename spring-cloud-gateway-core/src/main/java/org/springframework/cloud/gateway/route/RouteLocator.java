@@ -21,6 +21,8 @@ import reactor.core.publisher.Flux;
 
 /**
  * @author Spencer Gibb
+ *
+ * Route的定位器或者探测器
  */
 //TODO: rename to Routes?
 public interface RouteLocator {

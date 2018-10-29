@@ -52,18 +52,32 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 
 /**
+ * 这里才是定义外部Route
  * {@link RouteLocator} that loads routes from a {@link RouteDefinitionLocator}
  * @author Spencer Gibb
  */
 public class RouteDefinitionRouteLocator implements RouteLocator, BeanFactoryAware, ApplicationEventPublisherAware {
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private final RouteDefinitionLocator routeDefinitionLocator;
-	private final Map<String, RoutePredicateFactory> predicates = new LinkedHashMap<>();
-	private final Map<String, GatewayFilterFactory> gatewayFilterFactories = new HashMap<>();
-	private final GatewayProperties gatewayProperties;
+	private final RouteDefinitionLocator routeDefinitionLocator;    //RouteDefinitionLocator 对象
+	private final Map<String, RoutePredicateFactory> predicates = new LinkedHashMap<>();  //根据key找到对应的工厂
+	private final Map<String, GatewayFilterFactory> gatewayFilterFactories = new HashMap<>(); //同样是根据key找到对应的Filter的工厂
+
+	/**
+	 * GatewayProperties 已经提供了RouteDefinitionLocator 为什么还要依赖RouteDefinitionLocator ？
+	 *
+	 * result：这里并不会直接使用GatewayProperties的RouteDefinitionLocator
+	 * 仅仅是用到他提供的default filters
+	 * 最终传入的 RouteDefinitionLocator 实现上是 CompositeRouteDefinitionLocator 的实例
+	 * 它组合了 GatewayProperties 中所定义的 routes。
+	 */
+	private final GatewayProperties gatewayProperties;  //配置属性
+
+
 	private final SpelExpressionParser parser = new SpelExpressionParser();
+
 	private BeanFactory beanFactory;
+
 	private ApplicationEventPublisher publisher;
 
 	public RouteDefinitionRouteLocator(RouteDefinitionLocator routeDefinitionLocator,
@@ -104,10 +118,14 @@ public class RouteDefinitionRouteLocator implements RouteLocator, BeanFactoryAwa
 		});
 	}
 
+	/**
+	 * todo 重点核心方法
+	 * @return
+	 */
 	@Override
 	public Flux<Route> getRoutes() {
 		return this.routeDefinitionLocator.getRouteDefinitions()
-				.map(this::convertToRoute)
+				.map(this::convertToRoute) //调用convertToRoute方法将RouteDefinition转化为Route
 				//TODO: error handling
 				.map(route -> {
 					if (logger.isDebugEnabled()) {
@@ -124,13 +142,15 @@ public class RouteDefinitionRouteLocator implements RouteLocator, BeanFactoryAwa
 	}
 
 	private Route convertToRoute(RouteDefinition routeDefinition) {
+		// 将 PredicateDefinition 转换成 AsyncPredicate。
 		AsyncPredicate<ServerWebExchange> predicate = combinePredicates(routeDefinition);
+		//从routeDefinition 获取到Filters
 		List<GatewayFilter> gatewayFilters = getFilters(routeDefinition);
 
 		return Route.async(routeDefinition)
 				.asyncPredicate(predicate)
 				.replaceFilters(gatewayFilters)
-				.build();
+				.build();  //根据前方的谓语和filter 产生Route对象
 	}
 
 	@SuppressWarnings("unchecked")
@@ -175,54 +195,102 @@ public class RouteDefinitionRouteLocator implements RouteLocator, BeanFactoryAwa
 		return ordered;
 	}
 
+	/**
+	 * 将routeDefinition 转化为对应的Filter
+	 * @param routeDefinition
+	 * @return
+	 */
+
 	private List<GatewayFilter> getFilters(RouteDefinition routeDefinition) {
 		List<GatewayFilter> filters = new ArrayList<>();
 
 		//TODO: support option to apply defaults after route specific filters?
+		// 处理gatewayProperties 中默认的Filters
 		if (!this.gatewayProperties.getDefaultFilters().isEmpty()) {
 			filters.addAll(loadGatewayFilters("defaultFilters",
 					this.gatewayProperties.getDefaultFilters()));
 		}
-
+		//将routeDefinition定义的Filter转化为Filter
 		if (!routeDefinition.getFilters().isEmpty()) {
 			filters.addAll(loadGatewayFilters(routeDefinition.getId(), routeDefinition.getFilters()));
 		}
-
+        //对Filter进行排序
 		AnnotationAwareOrderComparator.sort(filters);
 		return filters;
 	}
 
 	private AsyncPredicate<ServerWebExchange> combinePredicates(RouteDefinition routeDefinition) {
+
 		List<PredicateDefinition> predicates = routeDefinition.getPredicates();
+
+		/**
+		 * 调用lookup方法将predicates列表中的第一个转换为AsyncPredicate
+		 */
 		AsyncPredicate<ServerWebExchange> predicate = lookup(routeDefinition, predicates.get(0));
 
+		//循环抵调用将列表中每一个 PredicateDefinition 都转换成 AsyncPredicate
 		for (PredicateDefinition andPredicate : predicates.subList(1, predicates.size())) {
 			AsyncPredicate<ServerWebExchange> found = lookup(routeDefinition, andPredicate);
-			predicate = predicate.and(found);
+
+			predicate = predicate.and(found);  //and方法将所有的predicate 组合成一个predicate.
 		}
 
 		return predicate;
 	}
+	/**
+	 * spring:
+      	 cloud:
+	       gateway:
+	           routes:
+	            - id: after_route
+	              uri: http://example.org
+	              predicates:
+	            - After=2017-01-20T17:42:47.789-07:00[America/Denver] # ①
+	 */
 
+	/**
+	 * 具体的转换逻辑
+	 * @param route
+	 * @param predicate
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	private AsyncPredicate<ServerWebExchange> lookup(RouteDefinition route, PredicateDefinition predicate) {
-		RoutePredicateFactory<Object> factory = this.predicates.get(predicate.getName());
+
+        //从predicates map中获取到对应名称的RoutePredicateFactory
+  		RoutePredicateFactory<Object> factory = this.predicates.get(predicate.getName());
 		if (factory == null) {
             throw new IllegalArgumentException("Unable to find RoutePredicateFactory with name " + predicate.getName());
 		}
+
+		// 获取 PredicateDefinition 中的 Map 类型参数，key 是固定字符串_genkey_ + 数字拼接而成。
 		Map<String, String> args = predicate.getArgs();
 		if (logger.isDebugEnabled()) {
 			logger.debug("RouteDefinition " + route.getId() + " applying "
 					+ args + " to " + predicate.getName());
 		}
-
+		/**
+		 * 对参数进行转换
+		 * key为 config 类（工厂类中通过范型指定）的属性名称
+		 */
         Map<String, Object> properties = factory.shortcutType().normalize(args, factory, this.parser, this.beanFactory);
-        Object config = factory.newConfig();
+
+		/**
+		 * 创建一个config对象
+		 */
+		Object config = factory.newConfig();
+
+		//将参数绑定到config上
         ConfigurationUtils.bind(config, properties,
                 factory.shortcutFieldPrefix(), predicate.getName(), validator);
-        if (this.publisher != null) {
+
+		/**
+		 * 这里发布了个什么事件？？？？
+		 */
+		if (this.publisher != null) {
             this.publisher.publishEvent(new PredicateArgsEvent(this, route.getId(), properties));
         }
+        //将 cofing 作参数代入，调用 factory 的 applyAsync 方法创建 AsyncPredicate 对象。
         return factory.applyAsync(config);
 	}
 }

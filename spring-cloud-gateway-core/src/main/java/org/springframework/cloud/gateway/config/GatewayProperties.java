@@ -39,6 +39,38 @@ public class GatewayProperties {
 
 	/**
 	 * List of Routes
+	 * 通过配置文件配置
+	 *spring:
+	 cloud:
+	 gateway:
+	 routes:
+	 # =====================================
+	 - host_example_to_httpbin=${test.uri}, Host=**.example.org
+
+	 # =====================================
+	 - id: host_foo_path_headers_to_httpbin
+	 uri: ${test.uri}
+	 predicates:
+	 - Host=**.foo.org
+	 - Path=/headers
+	 - Method=GET
+	 - Header=X-Request-Id, \d+
+	 - Query=foo, ba.
+	 - Query=baz
+	 - Cookie=chocolate, ch.p
+	 - After=1900-01-20T17:42:47.789-07:00[America/Denver]
+	 filters:
+	 - AddResponseHeader=X-Response-Foo, Bar
+
+	 # =====================================
+	 - id: add_request_header_test
+	 uri: ${test.uri}
+	 predicates:
+	 - Host=**.addrequestheader.org
+	 - Path=/headers
+	 filters:
+	 - AddRequestHeader=X-Request-Foo, Bar
+	 *
 	 */
 	@NotNull
 	@Valid
@@ -46,6 +78,14 @@ public class GatewayProperties {
 
 	/**
 	 * List of filter definitions that are applied to every route.
+	 *
+	 * 默认过滤器配置
+	 * spring:
+	 cloud:
+	 gateway:
+	 default-filters:
+	 - AddResponseHeader=X-Response-Default-Foo, Default-Bar
+	 - PrefixPath=/httpbin
 	 */
 	private List<FilterDefinition> defaultFilters = new ArrayList<>();//定义默认的Filter 默认的Filter会绑定所有的路由
 

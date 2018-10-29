@@ -157,6 +157,13 @@ public class GatewayControllerEndpoint implements ApplicationEventPublisherAware
 /*
 http POST :8080/admin/gateway/routes/apiaddreqhead uri=http://httpbin.org:80 predicates:='["Host=**.apiaddrequestheader.org", "Path=/headers"]' filters:='["AddRequestHeader=X-Request-ApiFoo, ApiBar"]'
 */
+
+	/**
+	 * 保存路由配置
+	 * @param id
+	 * @param route
+	 * @return
+	 */
 	@PostMapping("/routes/{id}")
 	@SuppressWarnings("unchecked")
 	public Mono<ResponseEntity<Void>> save(@PathVariable String id, @RequestBody Mono<RouteDefinition> route) {
@@ -164,7 +171,7 @@ http POST :8080/admin/gateway/routes/apiaddreqhead uri=http://httpbin.org:80 pre
 			r.setId(id);
 			log.debug("Saving route: " + route);
 			return r;
-		})).then(Mono.defer(() ->
+		})).then(Mono.defer(() ->       //defer 转为一种冷发布
 			Mono.just(ResponseEntity.created(URI.create("/routes/"+id)).build())
 		));
 	}
