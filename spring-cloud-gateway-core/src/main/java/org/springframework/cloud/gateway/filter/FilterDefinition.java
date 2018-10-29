@@ -42,6 +42,12 @@ public class FilterDefinition {
 	public FilterDefinition() {
 	}
 
+	/**
+	 * 通过 name 对应到 org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory 的实现类。
+	 * 例如说，name=AddRequestParameter 对应到 AddRequestParameterGatewayFilterFactory 。
+	 * args 属性，参数数组。例如，name=AddRequestParameter / args={"_genkey_0": "foo", "_genkey_1": "bar"} ，添加请求参数 foo 为 bar
+	 * @param text
+	 */
 	public FilterDefinition(String text) {
 		int eqIdx = text.indexOf("=");
 		if (eqIdx <= 0) {

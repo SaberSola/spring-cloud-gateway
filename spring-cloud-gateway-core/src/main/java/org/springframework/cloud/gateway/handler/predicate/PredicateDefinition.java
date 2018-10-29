@@ -31,12 +31,14 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
  * @author Spencer Gibb
+ * 谓语定义
  */
 @Validated
 public class PredicateDefinition {
 	@NotNull
-	private String name;
-	private Map<String, String> args = new LinkedHashMap<>();
+	private String name;  //谓语定义的名称 name=Query 对应的QueryRoutePredicateFactory
+
+	private Map<String, String> args = new LinkedHashMap<>();//这里代表参数 args 属性，参数数组。例如，name=Host / args={"_genkey_0" : "iocoder.cn"} ，匹配请求的 hostname 为 iocoder.cn
 
 	public PredicateDefinition() {
 	}
@@ -47,8 +49,10 @@ public class PredicateDefinition {
 			throw new ValidationException("Unable to parse PredicateDefinition text '" + text + "'" +
 					", must be of the form name=value");
 		}
+		//name
 		setName(text.substring(0, eqIdx));
 
+		//参数
 		String[] args = tokenizeToStringArray(text.substring(eqIdx+1), ",");
 
 		for (int i=0; i < args.length; i++) {

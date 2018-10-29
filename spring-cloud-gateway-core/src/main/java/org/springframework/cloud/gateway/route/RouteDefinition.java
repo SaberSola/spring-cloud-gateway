@@ -36,7 +36,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 /**
  * @author Spencer Gibb
  * 该组件会对route信息精心定义最终会被RouteLocator解析成route
- *
+ * 一个请求的正确过程---request---> Predicate ---匹配路由---> Route --- 过滤---> Filter ---请求---> url
  */
 @Validated
 public class RouteDefinition {
@@ -57,6 +57,12 @@ public class RouteDefinition {
 
 	public RouteDefinition() {}
 
+	/**
+	 * 根据 text 创建 RouteDefinition
+	 *
+	 * @param text 格式 ${id}=${uri},${predicates[0]},${predicates[1]}...${predicates[n]}
+	 *             例如 route001=http://127.0.0.1,Host=**.addrequestparameter.org,Path=/get
+	 */
 	public RouteDefinition(String text) {
 		int eqIdx = text.indexOf("=");
 		if (eqIdx <= 0) {

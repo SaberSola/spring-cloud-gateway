@@ -21,6 +21,8 @@ import reactor.core.publisher.Flux;
 
 /**
  * @author Spencer Gibb
+ * //路由定位器接口
+ * FLux 响应式编程
  */
 public interface RouteDefinitionLocator {
 

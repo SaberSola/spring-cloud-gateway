@@ -30,6 +30,10 @@ public class CompositeRouteDefinitionLocator implements RouteDefinitionLocator {
 		this.delegates = delegates;
 	}
 
+	/**
+	 * 将组合的路由定义全部返回
+	 * @return
+	 */
 	@Override
 	public Flux<RouteDefinition> getRouteDefinitions() {
 		return this.delegates.flatMap(RouteDefinitionLocator::getRouteDefinitions);
