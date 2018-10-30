@@ -27,7 +27,20 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
- * @author Spencer Gibb
+ *
+ * spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *       # =====================================
+ *       - id: header_route
+ *         uri: http://example.org
+ *         predicates:
+ *         - Header=X-Request-Id, \d+
+ *
+ *  匹配header
+ *
+ *  @author Spencer Gibb
  */
 public class HeaderRoutePredicateFactory extends AbstractRoutePredicateFactory<HeaderRoutePredicateFactory.Config> {
 

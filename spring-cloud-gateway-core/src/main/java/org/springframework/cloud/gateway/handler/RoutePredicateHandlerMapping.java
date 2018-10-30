@@ -34,7 +34,21 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 /**
- * @author Spencer Gibb
+ *
+ *   路由匹配
+ *
+ *   一个请求是怎么被Spring-Cloud_Gateway 处理的?
+ *
+ *   1: gateWayClients  ---> DispatcherHandler ---匹配HandlerMapping--->HandlerMapping ----匹配Route----> WebHandler ---FilterChain-->Service
+ *
+ *   2: org.springframework.web.reactive.DispatcherHandler 接收到请求，匹配 HandlerMapping ，此处会匹配到 RoutePredicateHandlerMapping
+ *
+ *   3: org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping ：接收到请求，匹配 Route 。
+ *
+ *   4: org.springframework.cloud.gateway.handler.FilteringWebHandler ：获得 Route 的 GatewayFilter 数组，创建 GatewayFilterChain 处理请求。
+ *
+ *
+ *   @author Spencer Gibb
  */
 public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 
@@ -51,29 +65,50 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 		} else {
 			managmentPort = null;
 		}
-		setOrder(1);		
+		/**
+		 *  为什么设置setOrder
+		 *
+		 *  Spring Cloud Gateway 的 GatewayWebfluxEndpoint 提供 HTTP API ，不需要经过网关，
+		 *
+		 *  它通过 RequestMappingHandlerMapping 进行请求匹配处理。RequestMappingHandlerMapping 的 order = 0 ，
+		 *
+		 *  需要排在 RoutePredicateHandlerMapping 前面。所有，RoutePredicateHandlerMapping 设置 order = 1 。
+		 *
+		 */
+		setOrder(1);
 		setCorsConfigurations(globalCorsProperties.getCorsConfigurations());
 	}
 
+	/**
+	 *
+	 *  匹配 Route ，并返回处理 Route 的 FilteringWebHandler
+	 *
+	 *  @param exchange
+	 *
+	 *  @return
+	 */
 	@Override
 	protected Mono<?> getHandlerInternal(ServerWebExchange exchange) {
 		// don't handle requests on the management port if set
 		if (managmentPort != null && exchange.getRequest().getURI().getPort() == managmentPort.intValue()) {
 			return Mono.empty();
 		}
-		exchange.getAttributes().put(GATEWAY_HANDLER_MAPPER_ATTR, getSimpleName());
+		exchange.getAttributes().put(GATEWAY_HANDLER_MAPPER_ATTR, getSimpleName());   //设置 GATEWAY_HANDLER_MAPPER_ATTR 为 RoutePredicateHandlerMapping 。
 
+		/**
+		 *  匹配 Route 。
+		 */
 		return lookupRoute(exchange)
 				// .log("route-predicate-handler-mapping", Level.FINER) //name this
-				.flatMap((Function<Route, Mono<?>>) r -> {
-					exchange.getAttributes().remove(GATEWAY_PREDICATE_ROUTE_ATTR);
+				.flatMap((Function<Route, Mono<?>>) r -> {                                        //返回 Route 的处理器 FilteringWebHandler 。
+					exchange.getAttributes().remove(GATEWAY_PREDICATE_ROUTE_ATTR);                // 移除 GATEWAY_PREDICATE_ROUTE_ATTR ？？？？不理解
 					if (logger.isDebugEnabled()) {
 						logger.debug("Mapping [" + getExchangeDesc(exchange) + "] to " + r);
 					}
-
+                    //r 设置GATEWAY_ROUTE_ATTR route
 					exchange.getAttributes().put(GATEWAY_ROUTE_ATTR, r);
-					return Mono.just(webHandler);
-				}).switchIfEmpty(Mono.empty().then(Mono.fromRunnable(() -> {
+					return Mono.just(webHandler);             //返回webHandler
+				}).switchIfEmpty(Mono.empty().then(Mono.fromRunnable(() -> {   //这里代表匹配不了Route
 					exchange.getAttributes().remove(GATEWAY_PREDICATE_ROUTE_ATTR);
 					if (logger.isTraceEnabled()) {
 						logger.trace("No RouteDefinition found for [" + getExchangeDesc(exchange) + "]");
@@ -100,15 +135,21 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 		return out.toString();
 	}
 
+
+	/**
+	 * 顺序匹配Route
+	 * @param exchange
+	 * @return
+	 */
 	protected Mono<Route> lookupRoute(ServerWebExchange exchange) {
 		return this.routeLocator
-				.getRoutes()
+				.getRoutes()                           //获取全部的Routes
 				//individually filter routes so that filterWhen error delaying is not a problem
-				.concatMap(route -> Mono
+				.concatMap(route -> Mono                       //和FlatMap类似
 						.just(route)
 						.filterWhen(r -> {
 							// add the current route we are testing
-							exchange.getAttributes().put(GATEWAY_PREDICATE_ROUTE_ATTR, r.getId());
+							exchange.getAttributes().put(GATEWAY_PREDICATE_ROUTE_ATTR, r.getId());            //异步的进行判断
 							return r.getPredicate().apply(exchange);
 						})
 						//instead of immediately stopping main flux due to error, log and swallow it
@@ -124,7 +165,7 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 					if (logger.isDebugEnabled()) {
 						logger.debug("Route matched: " + route.getId());
 					}
-					validateRoute(route, exchange);
+					validateRoute(route, exchange);    //这是个空方法 检验Route的有效性
 					return route;
 				});
 

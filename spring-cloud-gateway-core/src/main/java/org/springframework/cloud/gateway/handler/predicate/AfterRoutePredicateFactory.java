@@ -29,6 +29,18 @@ import static org.springframework.cloud.gateway.handler.predicate.BetweenRoutePr
 /**
  * @author Spencer Gibb
  */
+
+/**
+ * spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *       # =====================================
+ *       - id: after_route
+ *         uri: http://example.org
+ *         predicates:
+ *         - After=2017-01-20T17:42:47.789-07:00[America/Denver]
+ */
 public class AfterRoutePredicateFactory extends AbstractRoutePredicateFactory<AfterRoutePredicateFactory.Config> {
 
     //声明了泛型 即使用到配置类为AfterRoutePredicateFactory的config类
@@ -59,7 +71,7 @@ public class AfterRoutePredicateFactory extends AbstractRoutePredicateFactory<Af
 	public Predicate<ServerWebExchange> apply(Config config) {
 
 		//config配置类只包好datetime 字段
-		ZonedDateTime datetime = getZonedDateTime(config.getDatetime());
+		ZonedDateTime datetime = getZonedDateTime(config.getDatetime());   //解析配置事件
 		return exchange -> {
 			final ZonedDateTime now = ZonedDateTime.now();
 			return now.isAfter(datetime);

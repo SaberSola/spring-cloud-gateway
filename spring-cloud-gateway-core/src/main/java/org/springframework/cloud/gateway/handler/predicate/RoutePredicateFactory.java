@@ -29,16 +29,29 @@ import org.springframework.web.server.ServerWebExchange;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.toAsyncPredicate;
 
 /**
- * @author Spencer Gibb
- * 所有PredicateFactory的父类接口 用来生产predicate
- * 创建一个config 以其作为参数来绑定到apply（）生产一个Predicate
- * 在将其包装为AsyncPredicate
+ *  @author Spencer Gibb
+ *
+ *  所有PredicateFactory的父类接口 用来生产predicate
+ *
+ *  创建一个config 以其作为参数来绑定到apply（）生产一个Predicate
+ *
+ *  在将其包装为AsyncPredicate
+ *
+ *  谓语路由工厂
  */
 @FunctionalInterface
 public interface RoutePredicateFactory<C> extends ShortcutConfigurable, Configurable<C> {
 	String PATTERN_KEY = "pattern";
 
 	// useful for javadsl
+
+	/**
+	 *  接口方法，创建 Predicate 。
+	 *
+	 *  @param consumer
+	 *
+	 *  @return
+	 */
 	default Predicate<ServerWebExchange> apply(Consumer<C> consumer) {
 		C config = newConfig();
 		consumer.accept(config);
@@ -70,6 +83,13 @@ public interface RoutePredicateFactory<C> extends ShortcutConfigurable, Configur
 		return toAsyncPredicate(apply(config));
 	}
 
+	/**
+	 *  默认方法 获得 RoutePredicateFactory 的名字
+	 *
+	 *  该方法截取类名前半段，例如 QueryRoutePredicateFactory 的结果为 Query
+	 *
+	 *  @return
+	 */
 	default String name() {
 		return NameUtils.normalizeRoutePredicateName(getClass());
 	}

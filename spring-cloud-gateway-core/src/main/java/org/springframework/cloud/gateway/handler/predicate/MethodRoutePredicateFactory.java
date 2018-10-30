@@ -25,6 +25,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
+ * spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *       # =====================================
+ *       - id: method_route
+ *         uri: http://example.org
+ *         predicates:
+ *         - Method=GET
+ *
+ *     匹配方法
  * @author Spencer Gibb
  */
 public class MethodRoutePredicateFactory extends AbstractRoutePredicateFactory<MethodRoutePredicateFactory.Config> {

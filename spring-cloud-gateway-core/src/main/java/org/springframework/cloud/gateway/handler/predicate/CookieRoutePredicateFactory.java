@@ -28,7 +28,18 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
- * @author Spencer Gibb
+ * spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *       # =====================================
+ *       - id: cookie_route
+ *         uri: http://example.org
+ *         predicates:
+ *         - Cookie=chocolate, ch.p
+ *  请求指定 Cookie 正则匹配指定值。
+ *
+ *  @author Spencer Gibb
  */
 public class CookieRoutePredicateFactory extends AbstractRoutePredicateFactory<CookieRoutePredicateFactory.Config> {
 
