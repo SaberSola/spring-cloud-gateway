@@ -45,10 +45,19 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
  * @author Rossen Stoyanchev
  * @author Spencer Gibb
  * @since 0.1
+ *
+ * FilteringWebHandler 通过创建请求对应的 Route 对应的 GatewayFilterChain 进行处理。
+ *
+ *
  */
 public class FilteringWebHandler implements WebHandler {
+
 	protected static final Log logger = LogFactory.getLog(FilteringWebHandler.class);
 
+	/**
+	 *
+	 *  全局过滤器
+	 */
 	private final List<GatewayFilter> globalFilters;
 
 	public FilteringWebHandler(List<GlobalFilter> globalFilters) {
