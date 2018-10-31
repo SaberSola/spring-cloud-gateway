@@ -27,6 +27,8 @@ import reactor.core.publisher.Mono;
  * be used to implement cross-cutting, application-agnostic requirements such
  * as security, timeouts, and others.
  *
+ *
+ * 全局的GlobalFilter 将作用到全局的Route
  * @author Rossen Stoyanchev
  * @since 5.0
  */

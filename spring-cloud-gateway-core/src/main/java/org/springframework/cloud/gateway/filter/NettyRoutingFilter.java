@@ -59,9 +59,28 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.s
  */
 public class NettyRoutingFilter implements GlobalFilter, Ordered {
 
-	private final HttpClient httpClient;
-	private final ObjectProvider<List<HttpHeadersFilter>> headersFilters;
-	private final HttpClientProperties properties;
+
+	/**
+	 *   NettyRoutingFilter ，Netty 路由网关过滤器。
+	 *
+	 *   其根据 http:// 或 https:// 前缀( Scheme )过滤处理，使用基于 Netty 实现的 HttpClient 请求后端 Http 服务。
+	 *
+	 *
+	 *   流程:  client ---request---> NettyWriteResponseFilter--filter--> NettyWriteResponseFilter --inovke-->NettyHttpClient
+	 *          client -------执行结束---NettyWriteResponseFilter
+	 *
+	 *    NettyWriteResponseFilter ，与 NettyRoutingFilter 成对使用的网关过滤器。其将 NettyRoutingFilter 请求后端 Http 服务的响应写回客户端。
+	 *
+	 */
+
+
+	private final HttpClient httpClient;    //声明httpClient
+
+	private final ObjectProvider<List<HttpHeadersFilter>> headersFilters;  //请求头
+
+	private final HttpClientProperties properties;     //HttpClient 的属相值
+
+
 
 	public NettyRoutingFilter(HttpClient httpClient,
 							  ObjectProvider<List<HttpHeadersFilter>> headersFilters,
@@ -78,16 +97,22 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
+		//获取url
 		URI requestUrl = exchange.getRequiredAttribute(GATEWAY_REQUEST_URL_ATTR);
 
+		//只请求http || https 的 否则直接去下一个Filter
 		String scheme = requestUrl.getScheme();
 		if (isAlreadyRouted(exchange) || (!"http".equals(scheme) && !"https".equals(scheme))) {
 			return chain.filter(exchange);
 		}
+		//标志已经路由
 		setAlreadyRouted(exchange);
 
+		//获取请求
 		ServerHttpRequest request = exchange.getRequest();
 
+		//获取方法
 		final HttpMethod method = HttpMethod.valueOf(request.getMethod().toString());
 		final String url = requestUrl.toString();
 
@@ -95,10 +120,11 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 				exchange);
 
 		final DefaultHttpHeaders httpHeaders = new DefaultHttpHeaders();
+		// 设置请求头
 		filtered.forEach(httpHeaders::set);
 
 		String transferEncoding = request.getHeaders().getFirst(HttpHeaders.TRANSFER_ENCODING);
-		boolean chunkedTransfer = "chunked".equalsIgnoreCase(transferEncoding);
+		boolean chunkedTransfer = "chunked".equalsIgnoreCase(transferEncoding);  //判断是否需要分块
 
 		boolean preserveHost = exchange.getAttributeOrDefault(PRESERVE_HOST_HEADER_ATTRIBUTE, false);
 
@@ -157,6 +183,6 @@ public class NettyRoutingFilter implements GlobalFilter, Ordered {
 							properties.getResponseTimeout()))).onErrorMap(TimeoutException.class, th -> new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, null, th));
 		}
 
-		return responseFlux.then(chain.filter(exchange));
+		return responseFlux.then(chain.filter(exchange));  //结束后过滤到下一其请求
 	}
 }

@@ -35,14 +35,26 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.c
 import reactor.core.publisher.Mono;
 
 /**
- * @author Spencer Gibb
+ *
+ *  RouteToRequestUrlFilter 根据匹配的 Route ，计算请求的地址。注意，这里的地址指的是 URL ，而不是 URI 。
+ *
+ *  @author Spencer Gibb
+ *
+ *  URI：Uniform Resource Identifier，统一资源标识符
+ *
+ *  URL：Uniform Resource Location    统一资源定位符
  */
 public class RouteToRequestUrlFilter implements GlobalFilter, Ordered {
+
+
+
 
 	private static final Log log = LogFactory.getLog(RouteToRequestUrlFilter.class);
 
 	public static final int ROUTE_TO_URL_FILTER_ORDER = 10000;
+
 	private static final String SCHEME_REGEX = "[a-zA-Z]([a-zA-Z]|\\d|\\+|\\.|-)*:.*";
+
 	static final Pattern schemePattern = Pattern.compile(SCHEME_REGEX);
 
 	@Override
@@ -69,7 +81,7 @@ public class RouteToRequestUrlFilter implements GlobalFilter, Ordered {
 		}
 
 		URI requestUrl = UriComponentsBuilder.fromUri(uri)
-				.uri(routeUri)
+				.uri(routeUri)                                        //如果Route中的uri不为空 则会覆盖请求的url
 				.build(encoded)
 				.toUri();
 		exchange.getAttributes().put(GATEWAY_REQUEST_URL_ATTR, requestUrl);

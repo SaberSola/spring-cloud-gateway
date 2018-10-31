@@ -22,16 +22,30 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 
 /**
  * @author Spencer Gibb
+ *
+ * spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *       # =====================================
+ *       - id: add_request_header_route
+ *         uri: http://example.org
+ *         filters:
+ *         - AddRequestHeader=X-Request-Foo, Bar
+ *
  */
 public class AddRequestHeaderGatewayFilterFactory extends AbstractNameValueGatewayFilterFactory {
 
 	@Override
 	public GatewayFilter apply(NameValueConfig config) {
 		return (exchange, chain) -> {
+
+			//创建新的ServerHttpRequest
 			ServerHttpRequest request = exchange.getRequest().mutate()
 					.header(config.getName(), config.getValue())
 					.build();
 
+			//过滤器链接续过滤
 			return chain.filter(exchange.mutate().request(request).build());
 		};
     }

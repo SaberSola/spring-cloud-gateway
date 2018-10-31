@@ -23,12 +23,16 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * @author Spencer Gibb
+ *   @author Spencer Gibb
+ *
+ *   有序的网关实现类
+ *
+ *   过滤器数组首先会按照 order 升序排序，按照顺序过滤请求
  */
 public class OrderedGatewayFilter implements GatewayFilter, Ordered {
 
-	private final GatewayFilter delegate;
-	private final int order;
+	private final GatewayFilter delegate;        //  委托的GatewayFilter 也就是实现类
+	private final int order;                     //  order 排序
 
 	public OrderedGatewayFilter(GatewayFilter delegate, int order) {
 		this.delegate = delegate;
@@ -40,7 +44,7 @@ public class OrderedGatewayFilter implements GatewayFilter, Ordered {
 	}
 
 	@Override
-	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {                       //使用GatewayFilter delegate 过滤请求
 		return this.delegate.filter(exchange, chain);
 	}
 

@@ -21,6 +21,8 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.http.HttpHeaders;
 
 /**
+ *
+ * 预防XSS共计
  * https://blog.appcanary.com/2017/http-security-headers.html
  * @author Spencer Gibb
  */

@@ -37,10 +37,13 @@ import reactor.core.publisher.Mono;
 /**
  * @author Spencer Gibb
  * @author Tim Ysewyn
+ *
+ *  负载均衡的处理
  */
 public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 
 	private static final Log log = LogFactory.getLog(LoadBalancerClientFilter.class);
+
 	public static final int LOAD_BALANCER_CLIENT_FILTER_ORDER = 10100;
 
 	protected final LoadBalancerClient loadBalancer;
@@ -56,16 +59,23 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
+		//获取到uri
 		URI url = exchange.getAttribute(GATEWAY_REQUEST_URL_ATTR);
+
+		//获取前缀 如果不是需要负载均衡的直接过滤到
 		String schemePrefix = exchange.getAttribute(GATEWAY_SCHEME_PREFIX_ATTR);
+
 		if (url == null || (!"lb".equals(url.getScheme()) && !"lb".equals(schemePrefix))) {
 			return chain.filter(exchange);
 		}
 		//preserve the original url
+		//添加 原始请求URI 到 GATEWAY_ORIGINAL_REQUEST_URL_ATTR
 		addOriginalRequestUrl(exchange, url);
 
 		log.trace("LoadBalancerClientFilter url before: " + url);
 
+		//获取实例
 		final ServiceInstance instance = choose(exchange);
 
 		if (instance == null) {
@@ -81,6 +91,9 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 			overrideScheme = url.getScheme();
 		}
 
+		/**
+		 * 获取到具体的url
+		 */
 		URI requestUrl = loadBalancer.reconstructURI(new DelegatingServiceInstance(instance, overrideScheme), uri);
 
 		log.trace("LoadBalancerClientFilter url chosen: " + requestUrl);

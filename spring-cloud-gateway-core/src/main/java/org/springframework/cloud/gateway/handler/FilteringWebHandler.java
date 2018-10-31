@@ -60,6 +60,11 @@ public class FilteringWebHandler implements WebHandler {
 	 */
 	private final List<GatewayFilter> globalFilters;
 
+	/**
+	 *   FilteringWebHandler初始化 将 GlobalFilter 委托成 GatewayFilterAdapter 最后转为OrderedGatewayFilter（）
+	 *
+	 *   @param globalFilters
+	 */
 	public FilteringWebHandler(List<GlobalFilter> globalFilters) {
 		this.globalFilters = loadFilters(globalFilters);
 	}
@@ -98,10 +103,14 @@ public class FilteringWebHandler implements WebHandler {
 		return new DefaultGatewayFilterChain(combined).filter(exchange);
 	}
 
+	/**
+	 * 网关过滤器的默认实现类
+	 */
+
 	private static class DefaultGatewayFilterChain implements GatewayFilterChain {
 
-		private final int index;
-		private final List<GatewayFilter> filters;
+		private final int index;                                           //list 下标
+		private final List<GatewayFilter> filters;                         //过滤器集合
 
 		public DefaultGatewayFilterChain(List<GatewayFilter> filters) {
 			this.filters = filters;
@@ -131,6 +140,14 @@ public class FilteringWebHandler implements WebHandler {
 		}
 	}
 
+	/**
+	 *  网关适配过滤器
+	 *
+	 *  GatewayFilterChain 使用 GatewayFilter 过滤请求
+	 *
+	 *  通过 GatewayFilterAdapter 将 GlobalFilter 适配成 GatewayFilter
+	 *
+	 */
 	private static class GatewayFilterAdapter implements GatewayFilter {
 
 		private final GlobalFilter delegate;
