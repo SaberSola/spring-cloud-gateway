@@ -50,10 +50,26 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.containsEncodedParts;
 
 /**
- * 熔断器
+ *  熔断器
  *
- * Depends on `spring-cloud-starter-netflix-hystrix`, {@see http://cloud.spring.io/spring-cloud-netflix/}
- * @author Spencer Gibb
+ *  Depends on `spring-cloud-starter-netflix-hystrix`, {@see http://cloud.spring.io/spring-cloud-netflix/}
+ *
+ *  实现基于 Route 级别的熔断功能。
+ *
+ *  @author Spencer Gibb
+ *
+ *  spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *       # =====================================
+ *       - id: default_path_to_httpbin
+ *         uri: http://127.0.0.1:8081
+ *         order: 10000
+ *         predicates:
+ *         - Path=/**
+ *         filters:
+ *         - Hystrix=myCommandName
  */
 public class HystrixGatewayFilterFactory extends AbstractGatewayFilterFactory<HystrixGatewayFilterFactory.Config> {
 	private final ObjectProvider<DispatcherHandler> dispatcherHandler;

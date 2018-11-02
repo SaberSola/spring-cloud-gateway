@@ -16,8 +16,8 @@ public interface RateLimiter<C> extends StatefulConfigurable<C> {
 	Mono<Response> isAllowed(String routeId, String id);
 
 	class Response {
-		private final boolean allowed;
-		private final long tokensRemaining;
+		private final boolean allowed;                   //是否允许被访问
+		private final long tokensRemaining;              //令牌通剩余十来年该
 		private final Map<String, String> headers;
 
 		public Response(boolean allowed, Map<String, String> headers) {

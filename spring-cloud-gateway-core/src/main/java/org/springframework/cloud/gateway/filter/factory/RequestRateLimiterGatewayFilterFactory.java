@@ -27,7 +27,24 @@ import org.springframework.http.HttpStatus;
 import java.util.Map;
 
 /**
- * User Request Rate Limiter filter. See https://stripe.com/blog/rate-limiters and
+ *   User Request Rate Limiter filter. See https://stripe.com/blog/rate-limiters and
+ *
+ *   spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *       # =====================================
+ *       - id: default_path_to_httpbin
+ *         uri: http://127.0.0.1:8081
+ *         order: 10000
+ *         predicates:
+ *         - Path=/**
+ *         filters:
+ *         - RequestRateLimiter=10, 20, #{@principalNameKeyResolver}
+ *
+ *        RequestRateLimiter 参数解析  10 : 令牌桶上限  20: 令牌桶填充平均速率，单位：秒。 principalNameKeyResolver: 限流键解析器 Bean 对象名字
+ *
+ *
  */
 public class RequestRateLimiterGatewayFilterFactory extends AbstractGatewayFilterFactory<RequestRateLimiterGatewayFilterFactory.Config> {
 
